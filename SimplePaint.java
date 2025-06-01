@@ -9,9 +9,19 @@ public class SimplePaint {
     private static Color currentColor = Color.BLACK;
     private static int brushSize = 5;
     private static boolean isEraser = false;
+    private static int red = 0;
+    private static int green = 0;
+    private static int blue = 0;
+    private static JPanel colorPreview;
+    private static void updateCurrentColor() {
+        currentColor = new Color(red, green, blue);
+        if(colorPreview != null) {
+            colorPreview.setBackground(currentColor);
+        }
+    }
     public static void main(String[] args) {
         JFrame frame = new JFrame("SimplePaint");
-        frame.setSize(800, 600);
+        frame.setSize(1000, 600);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         JPanel drawPanel = new JPanel() {
             @Override
@@ -49,6 +59,31 @@ public class SimplePaint {
         toolPanel.setBackground(Color.LIGHT_GRAY);
         toolPanel.add(eraserButton);
         toolPanel.add(clearButton);
+        JSlider redSlider =  new JSlider(0, 255, 0);
+        redSlider.addChangeListener(e -> {
+            red = redSlider.getValue();
+            updateCurrentColor();
+        });
+        JSlider greenSlider = new JSlider(0, 255, 0);
+        greenSlider.addChangeListener(e -> {
+            green = greenSlider.getValue();
+            updateCurrentColor();
+        });
+        JSlider blueSlider = new JSlider(0, 255, 0);
+        blueSlider.addChangeListener(e -> {
+            blue = blueSlider.getValue();
+            updateCurrentColor();
+        });
+        colorPreview = new JPanel();
+        colorPreview.setPreferredSize(new Dimension(50, 50));
+        colorPreview.setBackground(currentColor);
+        toolPanel.add(new JLabel("R:"));
+        toolPanel.add(redSlider);
+        toolPanel.add(new JLabel("G:"));
+        toolPanel.add(greenSlider);
+        toolPanel.add(new JLabel("B:"));
+        toolPanel.add(blueSlider);
+        toolPanel.add(colorPreview);
         drawPanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -83,7 +118,6 @@ public class SimplePaint {
         frame.setLayout(new BorderLayout());
         frame.add(drawPanel, BorderLayout.CENTER);
         frame.add(toolPanel, BorderLayout.SOUTH);
-        frame.add(drawPanel);
         frame.setVisible(true);
     }
 }
