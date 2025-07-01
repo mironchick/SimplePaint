@@ -1,6 +1,5 @@
 import javax.swing.*;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
@@ -12,6 +11,7 @@ public class SimplePaint {
     private static int brushSize = 5;
     private static boolean isEraser = false;
     private static JPanel colorPreview;
+
     private static class ColoredPoint extends Point {
         Color color;
         boolean isEraser;
@@ -21,10 +21,12 @@ public class SimplePaint {
             this.isEraser = isEraser;
         }
     }
+
     public static void main(String[] args) {
         JFrame frame = new JFrame("SimplePaint");
-        frame.setSize(1000, 600);
+        frame.setSize(1000, 700);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        
         JPanel drawPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -42,33 +44,42 @@ public class SimplePaint {
                 }
             }
         };
+
         JButton eraserButton = new JButton("Eraser");
         eraserButton.addActionListener(e -> {
             isEraser = !isEraser;
             eraserButton.setBackground(isEraser ? Color.GRAY : null);
         });
+
         JButton clearButton = new JButton("Clear");
         clearButton.addActionListener(e -> {
             points.clear();
             drawPanel.repaint();
         });
-        JPanel toolPanel = new JPanel();
+
+        JPanel toolPanel = new JPanel(new BorderLayout());
         toolPanel.setBackground(Color.LIGHT_GRAY);
-        toolPanel.add(eraserButton);
-        toolPanel.add(clearButton);
-        JPanel colorChooserPanel = new JPanel(new BorderLayout());
+        
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(eraserButton);
+        buttonPanel.add(clearButton);
+
         JColorChooser colorChooser = new JColorChooser(currentColor);
         AbstractColorChooserPanel[] panels = colorChooser.getChooserPanels();
         for (AbstractColorChooserPanel panel : panels) {
             String displayName = panel.getDisplayName();
-            if (!displayName.equals("Swatches") && !displayName.equals("HSV")) {
+            if (!displayName.equals("Swatches")) {
                 colorChooser.removeChooserPanel(panel);
             }
         }
-        JTextField colorTextField = new JTextField(
-            currentColor.getRed() + " " + 
-            currentColor.getGreen() + " " + 
-            currentColor.getBlue(), 10);
+        colorChooser.setPreviewPanel(new JPanel());
+        
+        colorPreview = new JPanel();
+        colorPreview.setPreferredSize(new Dimension(40, 40));
+        colorPreview.setBackground(currentColor);
+        
+        JTextField colorTextField = new JTextField(8);
+        colorTextField.setText(currentColor.getRed() + " " + currentColor.getGreen() + " " + currentColor.getBlue());
         
         JButton applyColorButton = new JButton("Apply");
         applyColorButton.addActionListener(e -> {
@@ -88,6 +99,7 @@ public class SimplePaint {
                     "Ошибка", JOptionPane.ERROR_MESSAGE);
             }
         });
+        
         colorChooser.getSelectionModel().addChangeListener(e -> {
             currentColor = colorChooser.getColor();
             colorPreview.setBackground(currentColor);
@@ -97,47 +109,43 @@ public class SimplePaint {
                 currentColor.getBlue()
             );
         });
-        colorPreview = new JPanel();
-        colorPreview.setPreferredSize(new Dimension(50, 50));
-        colorPreview.setBackground(currentColor);
-        JPanel colorPanel = new JPanel(new BorderLayout());
-        colorPanel.add(colorChooser, BorderLayout.CENTER);
-        JPanel textFieldPanel = new JPanel();
-        textFieldPanel.add(new JLabel("RGB:"));
-        textFieldPanel.add(colorTextField);
-        textFieldPanel.add(applyColorButton);
-        colorChooserPanel.add(colorChooser, BorderLayout.CENTER);
-        colorChooserPanel.add(textFieldPanel, BorderLayout.SOUTH);
+        
+        JPanel colorControlPanel = new JPanel();
+        colorControlPanel.add(new JLabel("RGB:"));
+        colorControlPanel.add(colorTextField);
+        colorControlPanel.add(applyColorButton);
+        colorControlPanel.add(colorPreview);
 
-        colorPreview = new JPanel();
-        colorPreview.setPreferredSize(new Dimension(50, 50));
-        colorPreview.setBackground(currentColor);
-        toolPanel.add(colorChooserPanel);
-        toolPanel.add(colorPreview);
+        toolPanel.add(buttonPanel, BorderLayout.WEST);
+        toolPanel.add(colorChooser, BorderLayout.CENTER);
+        toolPanel.add(colorControlPanel, BorderLayout.SOUTH);
+
         drawPanel.addMouseListener(new MouseAdapter() {
-        @Override
-        public void mousePressed(MouseEvent e) {
-            points.add(new ColoredPoint(e.getPoint(), currentColor, isEraser));
-            drawPanel.repaint();
-        }
-    
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            points.add(null);
-        }
-    });
+            @Override
+            public void mousePressed(MouseEvent e) {
+                points.add(new ColoredPoint(e.getPoint(), currentColor, isEraser));
+                drawPanel.repaint();
+            }
+        
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                points.add(null);
+            }
+        });
 
         drawPanel.addMouseMotionListener(new MouseMotionAdapter() {
-        @Override
-        public void mouseDragged(MouseEvent e) {
-            points.add(new ColoredPoint(e.getPoint(), currentColor, isEraser));
-            drawPanel.repaint();
-        }
-    });
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                points.add(new ColoredPoint(e.getPoint(), currentColor, isEraser));
+                drawPanel.repaint();
+            }
+        });
+        
         drawPanel.setBackground(Color.WHITE);
         frame.setLayout(new BorderLayout());
         frame.add(drawPanel, BorderLayout.CENTER);
         frame.add(toolPanel, BorderLayout.SOUTH);
+        toolPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 180));   
         frame.setVisible(true);
     }
 }
