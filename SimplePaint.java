@@ -8,9 +8,11 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 public class SimplePaint {
     private static List<ColoredPoint> points = new ArrayList<>();
+    private static Stack<List<ColoredPoint>> undoStack = new Stack<>();
     private static Color currentColor = Color.BLACK;
     private static int brushSize = 5;
     private static boolean isEraser = false;
@@ -25,6 +27,11 @@ public class SimplePaint {
             this.color = color;
             this.isEraser = isEraser;
         }
+    }
+
+    private static void saveState() {
+        List<ColoredPoint> state = new ArrayList<>(points);
+        undoStack.push(state);
     }
 
     public static void main(String[] args) {
@@ -58,12 +65,21 @@ public class SimplePaint {
 
         JButton clearButton = new JButton("Clear");
         clearButton.addActionListener(e -> {
+            saveState();
             points.clear();
             drawPanel.repaint();
         });
 
         JButton saveButton = new JButton("Save");
         saveButton.addActionListener(e -> saveImage());
+
+        JButton undoButton = new JButton("Undo");
+        undoButton.addActionListener(e -> {
+            if (!undoStack.isEmpty()) {
+                points = undoStack.pop();
+                drawPanel.repaint();
+            }
+        });
 
         JPanel toolPanel = new JPanel(new BorderLayout());
         toolPanel.setBackground(Color.LIGHT_GRAY);
@@ -72,6 +88,7 @@ public class SimplePaint {
         buttonPanel.add(eraserButton);
         buttonPanel.add(clearButton);
         buttonPanel.add(saveButton);
+        buttonPanel.add(undoButton);
 
         JColorChooser colorChooser = new JColorChooser(currentColor);
         AbstractColorChooserPanel[] panels = colorChooser.getChooserPanels();
@@ -132,6 +149,7 @@ public class SimplePaint {
         drawPanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
+                saveState();
                 points.add(new ColoredPoint(e.getPoint(), currentColor, isEraser));
                 drawPanel.repaint();
             }
