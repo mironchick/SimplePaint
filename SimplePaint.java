@@ -2,6 +2,10 @@ import javax.swing.*;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +15,7 @@ public class SimplePaint {
     private static int brushSize = 5;
     private static boolean isEraser = false;
     private static JPanel colorPreview;
+    private static JPanel drawPanel;
 
     private static class ColoredPoint extends Point {
         Color color;
@@ -27,7 +32,7 @@ public class SimplePaint {
         frame.setSize(1000, 700);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
-        JPanel drawPanel = new JPanel() {
+        drawPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
@@ -57,12 +62,16 @@ public class SimplePaint {
             drawPanel.repaint();
         });
 
+        JButton saveButton = new JButton("Save");
+        saveButton.addActionListener(e -> saveImage());
+
         JPanel toolPanel = new JPanel(new BorderLayout());
         toolPanel.setBackground(Color.LIGHT_GRAY);
         
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(eraserButton);
         buttonPanel.add(clearButton);
+        buttonPanel.add(saveButton);
 
         JColorChooser colorChooser = new JColorChooser(currentColor);
         AbstractColorChooserPanel[] panels = colorChooser.getChooserPanels();
@@ -147,5 +156,40 @@ public class SimplePaint {
         frame.add(toolPanel, BorderLayout.SOUTH);
         toolPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 180));   
         frame.setVisible(true);
+    }
+
+    private static void saveImage() {
+        BufferedImage image = new BufferedImage(
+            drawPanel.getWidth(), 
+            drawPanel.getHeight(), 
+            BufferedImage.TYPE_INT_RGB
+        );
+        Graphics2D g2d = image.createGraphics();
+        drawPanel.paint(g2d);
+        g2d.dispose();
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Save Image");
+        fileChooser.setSelectedFile(new File("drawing.png"));
+        
+        int userSelection = fileChooser.showSaveDialog(drawPanel);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToSave = fileChooser.getSelectedFile();
+            String filePath = fileToSave.getAbsolutePath();
+            if (!filePath.toLowerCase().endsWith(".png")) {
+                fileToSave = new File(filePath + ".png");
+            }
+            
+            try {
+                ImageIO.write(image, "png", fileToSave);
+                JOptionPane.showMessageDialog(drawPanel, 
+                    "Изображение успешно сохранено!", 
+                    "Успех", JOptionPane.INFORMATION_MESSAGE);
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(drawPanel, 
+                    "Ошибка при сохранении изображения: " + ex.getMessage(), 
+                    "Ошибка", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 }
